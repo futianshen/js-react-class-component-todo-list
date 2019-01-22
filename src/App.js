@@ -1,27 +1,49 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import Input from '@material-ui/core/Input'
+import Button from '@material-ui/core/Button'
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
 
 class App extends Component {
+  constructor() {
+    super()
+    this.state = {
+      inputValue: '',
+      todoList: [],
+      id: 0 // id 可以寫在外面嗎？怎麼做？
+    }
+    
+  }
+  inputChange = e => {
+    this.setState({
+      inputValue: e.target.value
+    })
+  }
+  addTodo = () => {
+    const { todoList, id, inputValue } = this.state
+    this.setState({
+      todoList: [...todoList, {id, inputValue}],
+      inputValue: '',
+      id: id+1
+    })
+  }
+  
   render() {
+    const { inputValue, todoList } = this.state
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+        <Input value={inputValue} onChange={this.inputChange} placeholder="Todo" />
+        <Button onClick={this.addTodo}>Add</Button>
+        <List>
+          {todoList.map(item =>
+            <ListItem key={item.id} >
+              {item.inputValue}
+            </ListItem>
+          )}
+        </List>
       </div>
-    );
+    )
   }
 }
 
