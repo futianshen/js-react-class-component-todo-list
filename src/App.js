@@ -1,5 +1,7 @@
-import React, { Component } from 'react';
-import './App.css';
+import React, { Component } from 'react'
+import './App.css'
+
+// 將 material 拆分成元件
 import { AppBar, Toolbar, withStyles } from '@material-ui/core'
 import { Card , CardContent } from '@material-ui/core'
 import { Input, Button, List, ListItem } from '@material-ui/core'
@@ -9,9 +11,9 @@ import { FormControlLabel, Checkbox } from '@material-ui/core'
 // 對照之前做的Todolist 看看語法和命名有什麼不同？
 // Current Version -> jQuery Version Function（刪除、修改、進度條） -> ideal Todo list
 // 如何調整 CSS ？用哪一種邏輯調整 CSS？
-// 命名有問題就參考 Amelie
-// 有哪些功能要做？
-// 先求有再求好 把功能做出來，
+// Component method 命名有問題就參考 Amelie
+// 先求有再求好 把功能做出來。
+
 const styles = theme => ({
   root: {
     flexGrow: 1,
@@ -24,29 +26,27 @@ const styles = theme => ({
 class Item extends Component {
   constructor(props) {
     super(props)
-    this.state={
-      checked: false
-    }
   }
-  handleCheck = () => {
-    const { checked } = this.state
-    this.setState({
-      checked: !checked
-    })
+  checkTodoTrigger = () => {
+    const { checkTodo, todo } = this.props
+    checkTodo(todo)
   }
-  removeTodoClick = () => {
+  removeTodoTrigger = () => {
     const { removeTodo, todo } = this.props
     if(window.confirm('確定要刪除嗎？')) removeTodo(todo)
   }
+  modifyTodoTrigger = () => {
+
+  }
   render() {
-    const { id, value } = this.props
+    const { id, value, checked } = this.props
     return (
-      <ListItem >
+      <ListItem onDoubleClick={this.modifyTodoTrigger}>
         <FormControlLabel
           control={
             <Checkbox
-              checked={this.state.checked}
-              onChange={this.handleCheck}
+              checked={checked}
+              onChange={this.checkTodoTrigger}
               value=""
               /* classes={{
                 root: classes.root,
@@ -57,10 +57,10 @@ class Item extends Component {
         />
         {id}:{value}
         <Button
+          //className={classes.button}
           variant="outlined"
           color="secondary"
-          //className={classes.button}
-          onClick={this.removeTodoClick}
+          onClick={this.removeTodoTrigger}
         >
           刪除
         </Button>
@@ -75,7 +75,7 @@ class App extends Component {
     this.state = {
       inputValue: '',
       todoList: [],
-      id: 0 // id 可以寫在外面嗎？怎麼做？
+      id: 0, // id 可以寫在外面嗎？怎麼做？
     }
   }
   inputChange = e => { // 這種寫法叫什麼？
@@ -87,13 +87,28 @@ class App extends Component {
     const { todoList, id, inputValue } = this.state
     if(inputValue!=='') {
       this.setState({
-        todoList: [...todoList, {id, inputValue}], // inputValue 可不可以改放其他的？
+        todoList: [...todoList, 
+          {
+            id, 
+            value: inputValue,
+            checked: false
+          }
+        ],
         inputValue: '',
         id: id+1
       })
     } else {
       alert('請輸入內容')
     }
+  }
+  checkTodo = todo => {
+    const { todoList } = this.state
+    let result = todoList.find(item=>item.id===todo.id)
+    result.checked = !result.checked
+    let newTodoList = todoList.map(item=>item.id===todo.id ? result : item )
+    this.setState({
+      todoList: newTodoList
+    })
   }
   removeTodo = todo => {
     const { todoList } = this.state
@@ -119,9 +134,19 @@ class App extends Component {
           <Button variant="contained" color="secondary" className={classes.button}>未完成</Button>
 
           <CardContent>
+            <LinearProgress color="secondary" />
             <List>
               {todoList.map(item =>
-                <Item key={item.id} id={item.id} value={item.inputValue} todo={item} removeTodo={this.removeTodo} />
+                <Item 
+                  key={item.id} 
+                  id={item.id} 
+                  checked={item.checked}
+                  value={item.value} 
+                  todo={item}
+                  checkTodo={this.checkTodo}
+                  removeTodo={this.removeTodo}
+                  modifyTodo={this.modifyTodo}
+                />
               )}
             </List>
           </CardContent>
