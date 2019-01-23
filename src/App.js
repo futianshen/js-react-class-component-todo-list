@@ -1,16 +1,17 @@
 import React, { Component } from 'react';
 import './App.css';
-import { AppBar, Toolbar, Typography, withStyles } from '@material-ui/core'
+import { AppBar, Toolbar, withStyles } from '@material-ui/core'
 import { Card , CardContent } from '@material-ui/core'
 import { Input, Button, List, ListItem } from '@material-ui/core'
-import { LinearProgress } from '@material-ui/core'
+//import { LinearProgress } from '@material-ui/core'
 import { FormControlLabel, Checkbox } from '@material-ui/core'
 
 // 對照之前做的Todolist 看看語法和命名有什麼不同？
 // Current Version -> jQuery Version Function（刪除、修改、進度條） -> ideal Todo list
 // 如何調整 CSS ？用哪一種邏輯調整 CSS？
 // 命名有問題就參考 Amelie
-
+// 有哪些功能要做？
+// 先求有再求好 把功能做出來，
 const styles = theme => ({
   root: {
     flexGrow: 1,
@@ -19,6 +20,48 @@ const styles = theme => ({
     margin: theme.spacing.unit,
   }
 })
+
+class Item extends Component {
+  constructor(props) {
+    super(props)
+    this.state={
+      checked: true
+    }
+  }
+  removeTodoClick = () => {
+    const { removeTodo, todo } = this.props
+    removeTodo(todo)
+  }
+  render() {
+    const { id, value } = this.props
+    return (
+      <ListItem key={id} >
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={this.state.checked}
+              //onChange={this.handleChange('checkedG')}
+              value=""
+              /* classes={{
+                root: classes.root,
+                checked: classes.checked,
+              }} */
+            />
+          }
+        />
+        {value}
+        <Button
+          variant="outlined"
+          color="secondary"
+          //className={classes.button}
+          onClick={this.removeTodoClick}
+        >
+          刪除
+        </Button>
+      </ListItem>
+    )
+  }
+}
 
 class App extends Component {
   constructor() {
@@ -46,54 +89,33 @@ class App extends Component {
       alert('請輸入內容')
     }
   }
+  removeTodo = todo => {
+    const { todoList } = this.state
+    this.setState({
+      todoList: todoList.filter(item=>item.id!==todo.id)
+    })
+  }
   render() {
     const { inputValue, todoList } = this.state
     const { classes } = this.props
     return (
       <div className="App">
         <AppBar position="static" color="default" className={classes.root}>
-          <Toolbar>
-            <Typography variant="h6" color="inherit">
-              Photos
-            </Typography>
-          </Toolbar>
+          <Toolbar>React Todo</Toolbar>
         </AppBar>
+
         <Input value={inputValue} onChange={this.inputChange} placeholder="Todo" />
         <Button onClick={this.addTodo}>Add</Button>
+
         <Card>
-          <Button variant="contained" className={classes.button}>
-            全部
-          </Button>
-          <Button variant="contained" color="primary" className={classes.button}>
-            完成
-          </Button>
-          <Button variant="contained" color="secondary" className={classes.button}>
-            未完成
-          </Button>
-          <LinearProgress color="secondary" variant="determinate" value={this.state.completed} />
+          <Button variant="contained" className={classes.button}>全部</Button>
+          <Button variant="contained" color="primary" className={classes.button}>完成</Button>
+          <Button variant="contained" color="secondary" className={classes.button}>未完成</Button>
+          {/* <LinearProgress color="secondary" variant="determinate" value={this.state.completed} /> */}
           <CardContent>
             <List>
               {todoList.map(item => // map函式是怎麼運作的，可不可以自己寫一個map函式出來？
-                <ListItem key={item.id} >
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={this.state.checked}
-                        //onChange={this.handleChange('checkedG')}
-                        value=""
-                        classes={{
-                          root: classes.root,
-                          checked: classes.checked,
-                        }}
-                      />
-                    }
-                    label="Custom color"
-                  />
-                  {item.inputValue}
-                  <Button variant="outlined" color="secondary" className={classes.button}>
-                    刪除
-                  </Button>
-                </ListItem>
+                <Item key={item.id} value={item.inputValue} todo={item} removeTodo={this.removeTodo} />
               )}
             </List>
           </CardContent>
