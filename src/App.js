@@ -25,8 +25,14 @@ class Item extends Component {
   constructor(props) {
     super(props)
     this.state={
-      checked: true
+      checked: false
     }
+  }
+  handleCheck = () => {
+    const { checked } = this.state
+    this.setState({
+      checked: !checked
+    })
   }
   removeTodoClick = () => {
     const { removeTodo, todo } = this.props
@@ -35,12 +41,12 @@ class Item extends Component {
   render() {
     const { id, value } = this.props
     return (
-      <ListItem key={id} >
+      <ListItem >
         <FormControlLabel
           control={
             <Checkbox
               checked={this.state.checked}
-              //onChange={this.handleChange('checkedG')}
+              onChange={this.handleCheck}
               value=""
               /* classes={{
                 root: classes.root,
@@ -49,7 +55,7 @@ class Item extends Component {
             />
           }
         />
-        {value}
+        {id}:{value}
         <Button
           variant="outlined"
           color="secondary"
@@ -115,7 +121,7 @@ class App extends Component {
           <CardContent>
             <List>
               {todoList.map(item => // map函式是怎麼運作的，可不可以自己寫一個map函式出來？
-                <Item key={item.id} value={item.inputValue} todo={item} removeTodo={this.removeTodo} />
+                <Item key={item.id} id={item.id} value={item.inputValue} todo={item} removeTodo={this.removeTodo} />
               )}
             </List>
           </CardContent>
