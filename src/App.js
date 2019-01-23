@@ -3,7 +3,7 @@ import './App.css';
 import { AppBar, Toolbar, withStyles } from '@material-ui/core'
 import { Card , CardContent } from '@material-ui/core'
 import { Input, Button, List, ListItem } from '@material-ui/core'
-//import { LinearProgress } from '@material-ui/core'
+import { LinearProgress } from '@material-ui/core'
 import { FormControlLabel, Checkbox } from '@material-ui/core'
 
 // 對照之前做的Todolist 看看語法和命名有什麼不同？
@@ -36,7 +36,7 @@ class Item extends Component {
   }
   removeTodoClick = () => {
     const { removeTodo, todo } = this.props
-    removeTodo(todo)
+    if(window.confirm('確定要刪除嗎？')) removeTodo(todo)
   }
   render() {
     const { id, value } = this.props
@@ -117,10 +117,10 @@ class App extends Component {
           <Button variant="contained" className={classes.button}>全部</Button>
           <Button variant="contained" color="primary" className={classes.button}>完成</Button>
           <Button variant="contained" color="secondary" className={classes.button}>未完成</Button>
-          {/* <LinearProgress color="secondary" variant="determinate" value={this.state.completed} /> */}
+
           <CardContent>
             <List>
-              {todoList.map(item => // map函式是怎麼運作的，可不可以自己寫一個map函式出來？
+              {todoList.map(item =>
                 <Item key={item.id} id={item.id} value={item.inputValue} todo={item} removeTodo={this.removeTodo} />
               )}
             </List>
