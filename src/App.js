@@ -1,9 +1,24 @@
 import React, { Component } from 'react';
 import './App.css';
-import Input from '@material-ui/core/Input'
-import Button from '@material-ui/core/Button'
-import List from '@material-ui/core/List'
-import ListItem from '@material-ui/core/ListItem'
+import { AppBar, Toolbar, Typography, withStyles } from '@material-ui/core'
+import { Card , CardContent } from '@material-ui/core'
+import { Input, Button, List, ListItem } from '@material-ui/core'
+import { LinearProgress } from '@material-ui/core'
+import { FormControlLabel, Checkbox } from '@material-ui/core'
+
+// 對照之前做的Todolist 看看語法和命名有什麼不同？
+// Current Version -> jQuery Version Function（刪除、修改、進度條） -> ideal Todo list
+// 如何調整 CSS ？用哪一種邏輯調整 CSS？
+// 命名有問題就參考 Amelie
+
+const styles = theme => ({
+  root: {
+    flexGrow: 1,
+  },
+  button: {
+    margin: theme.spacing.unit,
+  }
+})
 
 class App extends Component {
   constructor() {
@@ -13,38 +28,79 @@ class App extends Component {
       todoList: [],
       id: 0 // id 可以寫在外面嗎？怎麼做？
     }
-    
   }
-  inputChange = e => {
+  inputChange = e => { // 這種寫法叫什麼？
     this.setState({
       inputValue: e.target.value
     })
   }
   addTodo = () => {
     const { todoList, id, inputValue } = this.state
-    this.setState({
-      todoList: [...todoList, {id, inputValue}],
-      inputValue: '',
-      id: id+1
-    })
+    if(inputValue!=='') {
+      this.setState({
+        todoList: [...todoList, {id, inputValue}], // inputValue 可不可以改放其他的？
+        inputValue: '',
+        id: id+1
+      })
+    } else {
+      alert('請輸入內容')
+    }
   }
-  
   render() {
     const { inputValue, todoList } = this.state
+    const { classes } = this.props
     return (
       <div className="App">
+        <AppBar position="static" color="default" className={classes.root}>
+          <Toolbar>
+            <Typography variant="h6" color="inherit">
+              Photos
+            </Typography>
+          </Toolbar>
+        </AppBar>
         <Input value={inputValue} onChange={this.inputChange} placeholder="Todo" />
         <Button onClick={this.addTodo}>Add</Button>
-        <List>
-          {todoList.map(item =>
-            <ListItem key={item.id} >
-              {item.inputValue}
-            </ListItem>
-          )}
-        </List>
+        <Card>
+          <Button variant="contained" className={classes.button}>
+            全部
+          </Button>
+          <Button variant="contained" color="primary" className={classes.button}>
+            完成
+          </Button>
+          <Button variant="contained" color="secondary" className={classes.button}>
+            未完成
+          </Button>
+          <LinearProgress color="secondary" variant="determinate" value={this.state.completed} />
+          <CardContent>
+            <List>
+              {todoList.map(item => // map函式是怎麼運作的，可不可以自己寫一個map函式出來？
+                <ListItem key={item.id} >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={this.state.checked}
+                        //onChange={this.handleChange('checkedG')}
+                        value=""
+                        classes={{
+                          root: classes.root,
+                          checked: classes.checked,
+                        }}
+                      />
+                    }
+                    label="Custom color"
+                  />
+                  {item.inputValue}
+                  <Button variant="outlined" color="secondary" className={classes.button}>
+                    刪除
+                  </Button>
+                </ListItem>
+              )}
+            </List>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 }
 
-export default App;
+export default  withStyles(styles)(App);
