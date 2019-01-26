@@ -4,7 +4,6 @@ import { AppBar, Toolbar, withStyles } from '@material-ui/core'
 import { Input, Button } from '@material-ui/core'
 import TodoList from '../TodoList'
 
-
 // 對照之前做的 React Todolist 看看語法和命名有什麼不同？
 // Current Version -> jQuery Version Function（刪除、修改、進度條） -> ideal Todo list
 // 如何調整 CSS ？用哪一種邏輯調整 CSS？
@@ -27,16 +26,15 @@ class App extends Component {
       inputValue: '',
       todoList: [],
       id: 0, // id 可以寫在外面嗎？怎麼做？
-      completed: 0 //改名成 totalCompletePercent 會更好
+      progress: 100, //改名成 totalCompletePercent 會更好
     }
   }
   componentDidUpdate(prevProps, prevState) {
     const { todoList } = this.state
-    if(this.state.todoList!==prevState.todoList) {
-      this.setState({
-        completed: resetProgress(todoList)
-      })
-    }
+    if(todoList!==prevState.todoList) {
+      if(todoList.length===0) this.setState({completed: 100})
+      else this.setState({completed: resetProgress(todoList)})
+    } 
   }
   inputChange = e => { // 這種使用arrow function寫法叫什麼？
     this.setState({
@@ -49,8 +47,10 @@ class App extends Component {
       this.setState({
         todoList: [...todoList, 
           {
-            id, 
+            id,
             value: inputValue,
+            modifyValue: inputValue,
+            modifyState: false,
             checked: false,
           }
         ],
@@ -65,7 +65,7 @@ class App extends Component {
     result.checked = !result.checked
     let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
     this.setState({
-      todoList: newTodoList,
+      todoList: newTodoList
     })
   }
   removeTodo = todo => {
@@ -74,23 +74,46 @@ class App extends Component {
       todoList: todoList.filter(item=>item.id!==todo.id),
     })
   }
+  modifyTodo = todo => {
+    //重複動作可以做成函式
+    const { todoList } = this.state
+    let result = todoList.find(item=>item.id===todo.id)
+    result.modifyState = true
+    let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
+    this.setState({
+      todoList: newTodoList
+    })
+  }
+  modifyTodoDone = (todo, modifyValue) => {
+    //重複動作可以做成函式
+    const { todoList } = this.state 
+    let result = todoList.find(item=>item.id===todo.id)
+    result.modifyValue = modifyValue
+    result.value = modifyValue
+    result.modifyState = false
+    let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
+    this.setState({
+      todoList: newTodoList
+    })
+  }
   render() {
-    const { inputValue, todoList, completed, checkTodo } = this.state
+    const { inputValue, todoList, progress, modifyState } = this.state
     const { classes } = this.props
     return (
       <div className="App">
         <AppBar position="static" color="default" className={classes.root}>
           <Toolbar>React Todo</Toolbar>
         </AppBar>
-
         <Input value={inputValue} onChange={this.inputChange} placeholder="Todo" />
         <Button onClick={this.addTodo}>Add</Button>
         <TodoList 
           todoList={todoList} 
-          completed={completed} 
+          modifyState={modifyState}
+          progress={progress}
           checkTodo={this.checkTodo}
           removeTodo={this.removeTodo}
           modifyTodo={this.modifyTodo}
+          modifyTodoDone={this.modifyTodoDone}
         />
       </div>
     )
