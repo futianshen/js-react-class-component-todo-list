@@ -32,8 +32,8 @@ class App extends Component {
   componentDidUpdate(prevProps, prevState) {
     const { todoList } = this.state
     if(todoList!==prevState.todoList) {
-      if(todoList.length===0) this.setState({completed: 100})
-      else this.setState({completed: resetProgress(todoList)})
+      if(todoList.length!==0) this.setState({progress: resetProgress(todoList)})
+      else this.setState({progress: 100})
     } 
   }
   inputChange = e => { // 這種使用arrow function寫法叫什麼？
@@ -85,7 +85,7 @@ class App extends Component {
     })
   }
   modifyTodoDone = (todo, modifyValue) => {
-    //重複動作可以做成函式
+    // modifyTodoDone 和 modifyTodo 重複動作可以做成函式 
     const { todoList } = this.state 
     let result = todoList.find(item=>item.id===todo.id)
     result.modifyValue = modifyValue
@@ -97,7 +97,7 @@ class App extends Component {
     })
   }
   render() {
-    const { inputValue, todoList, progress, modifyState } = this.state
+    const { inputValue, todoList, progress } = this.state
     const { classes } = this.props
     return (
       <div className="App">
@@ -108,7 +108,6 @@ class App extends Component {
         <Button onClick={this.addTodo}>Add</Button>
         <TodoList 
           todoList={todoList} 
-          modifyState={modifyState}
           progress={progress}
           checkTodo={this.checkTodo}
           removeTodo={this.removeTodo}

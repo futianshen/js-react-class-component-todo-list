@@ -46,7 +46,6 @@ class ModifyItem extends Component {
     })
   }
   modifyTodoDoneTrigger = () => {
-    console.log(1)
     const { modifyValue } = this.state
     const { modifyTodoDone, todo } = this.props
     modifyTodoDone(todo, modifyValue)
@@ -59,7 +58,7 @@ class ModifyItem extends Component {
         <Button
           variant="outlined"
           color="primary"
-          onClick={this.modifyTodoDoneTrigger}
+          onClick={this.modifyTodoDoneTrigger} 
         >
           修改
         </Button>
@@ -126,25 +125,73 @@ class LinearDeterminate extends Component { // 可以用 functional Component
 }
 
 class TodoList extends Component {
+  constructor(props) {
+    super(props)
+    this.state={
+      listState: 0
+    }
+  }
+  allList = () => {
+    this.setState({
+      listState: 0
+    })
+  }
+  completeList = () => {
+    this.setState({
+      listState: 1
+    })
+  }
+  uncompleteList = () => {
+    this.setState({
+      listState: 2
+    })
+  }
   render() {
-    const { classes, todoList, progress, state } = this.props
+    const { listState } = this.state
+    const { classes, todoList, progress } = this.props
+    console.log(todoList)
+    console.log(listState)
+    let todolist = listState ? 
+      (listState%2 ? 
+        todoList.filter(item=>item.checked===true) : todoList.filter(item=>item.checked===false)
+      ) 
+    : todoList
     const { checkTodo, removeTodo, modifyTodo, modifyTodoDone } = this.props
     return (
       <Card>
-        <Button variant="contained" className={classes.button}>全部</Button>
-        <Button variant="contained" color="primary" className={classes.button}>完成</Button>
-        <Button variant="contained" color="secondary" className={classes.button}>未完成</Button>
         <LinearDeterminate progress={progress} />
+        <Button 
+          variant="contained" 
+          className={classes.button}
+          onClick={this.allList}
+        >
+          全部
+        </Button>
+        <Button 
+          variant="contained"
+          color="primary" 
+          className={classes.button} 
+          onClick={this.completeList}
+        >
+          完成
+        </Button>
+        <Button 
+          variant="contained" 
+          color="secondary"
+          className={classes.button} 
+          onClick={this.uncompleteList}
+        >
+          未完成
+        </Button>
         <CardContent>
           <List>
-            {todoList.map(item =>
+            {todolist.map(item =>
               <Item 
                 key={item.id}
                 checked={item.checked}
                 value={item.value}
                 modifyValue={item.modifyValue}
                 todo={item}
-                state={state}
                 checkTodo={checkTodo}
                 removeTodo={removeTodo}
                 modifyTodo={modifyTodo}
@@ -159,4 +206,3 @@ class TodoList extends Component {
 }
 
 export default withStyles(styles)(TodoList)
-
