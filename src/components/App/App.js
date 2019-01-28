@@ -21,14 +21,12 @@ class App extends Component {
       inputValue: '',
       progress: 100, //改名成 totalCompletePercent 會更好
       todoList: [],// 這個可不可以併到 history 物件裡面？
-      id: 0, // id 可以寫在外面嗎？怎麼做？
-
-      history: [{
-        step: 0,
-        todoList: []
-      }],
+      id: 0, // id 可以寫在外面嗎？怎麼做？參考 huli Sample Code
+      step: 0,
+      history: [[]],
       checkToggle: false,
-      modifyState: false
+      modifyState: false,
+      isHistoryRecord: true
     }
   }
   componentDidUpdate(prevProps, prevState) {
@@ -38,56 +36,61 @@ class App extends Component {
       if(todoList.length!==0) this.setState({progress: resetProgress(todoList)})
       else this.setState({progress: 100})
     }
-    //新增刪除時 記錄 history
-    const { history } = this.state
-    if(todoList.length!==prevState.todoList.length) {
-      console.log('new')
-      this.setState({
-        history: [...history, {
-          step: history.length,
-          todoList
-        }]
-      })
+    //記錄 history
+    const { isHistoryRecord } = this.state
+    const { history, step } = this.state
+    if(isHistoryRecord) {
+      if(isHistoryRecord!==prevState.isHistoryRecord) {
+        //在過去版本刪除未來紀錄
+        this.setState({
+          history: history.filter((todoList, index)=> index<=step)
+        })
+      } else {
+        //新增、刪除 
+        if(todoList.length!==prevState.todoList.length) {
+          this.setState({
+            step: step+1,
+            history: [...history, todoList]
+          })
+        }
+        //Check
+        const { checkToggle } = this.state
+        if(checkToggle!==prevState.checkToggle) {
+          this.setState({
+            step: step+1,
+            history: [...history, todoList]
+          })
+        }
+        //修改完成
+        const { modifyState } = this.state
+        if(modifyState!==prevState.modifyState && !modifyState ) {
+          this.setState({
+            step: step+1,
+            history: [...history, todoList]
+          })
+        }
+      }
     }
-    //check時 記錄 history
-    const { checkToggle } = this.state
-    if(checkToggle!==prevState.checkToggle) {
-      console.log('check')
-      this.setState({
-        history: [...history, {
-          step: history.length,
-          todoList
-        }]
-      })
-    }
-    //修改完成時 紀錄 history
-    const { modifyState } = this.state
-    if(modifyState!==prevState.modifyState && !modifyState ) {
-      this.setState({
-        history: [...history, {
-          step: history.length,
-          todoList
-        }]
-      })
-    }
-
   }
   undo = () => {
     const { history, step } = this.state
-    if(step>=1) {
-      let todoList = history[step-1]
+    if(1<=step) {
+      const todoList = [...history[step-1]]
       this.setState({
-        todoList: todoList,
-        step: step-1
+        step: step-1,
+        todoList,
+        isHistoryRecord: false
       })
     }
   }
   redo = () => {
     const { history, step } = this.state
     if(step<=history.length-2) {
-      let todoList = history[step+1]
+      const todoList = [...history[step+1]]
       this.setState({
-        todoList: todoList,
+        step: step+1,
+        todoList,
+        isHistoryRecord: false
       })
     }
   }
@@ -113,30 +116,39 @@ class App extends Component {
           }
         ],
         inputValue: '',
-        id: id+1
+        id: id+1,
+        isHistoryRecord: true
       })
     } else alert('請輸入內容')
   }
   checkTodo = todo => {
     const { todoList, checkToggle } = this.state
-    let result = todoList.find(item=>item.id===todo.id)
+    let result = {...todoList.find(item=>item.id===todo.id)}
     result.checked = !result.checked
+    //上下比對會發生什麼問題？跟物件指向記憶體位置有關
+    //let result = todoList.find(item=>item.id===todo.id)
+    //result.checked = !result.checked
     let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
     this.setState({
       todoList: newTodoList,
       checkToggle: !checkToggle,
+      isHistoryRecord: true
     })
   }
   removeTodo = todo => {
     const { todoList } = this.state
     this.setState({
-      todoList: todoList.filter(item=>item.id!==todo.id)
+      todoList: todoList.filter(item=>item.id!==todo.id),
+      isHistoryRecord: true
     })
   }
   modifyTodo = todo => {
     const { todoList } = this.state
-    let result = todoList.find(item=>item.id===todo.id)
+    let result = {...todoList.find(item=>item.id===todo.id)}
     result.modifyState = true
+    //上下比對會發生什麼問題？跟物件指向記憶體位置有關
+    //let result = todoList.find(item=>item.id===todo.id)
+    //result.modifyState = true
     let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
     this.setState({
       todoList: newTodoList,
@@ -145,22 +157,23 @@ class App extends Component {
   }
   modifyTodoDone = (todo, modifyValue) => {
     if(modifyValue) {
-      const { todoList } = this.state 
-      let result = todoList.find(item=>item.id===todo.id)
+      const { todoList } = this.state  
+      let result = {...todoList.find(item=>item.id===todo.id)}  //原因物件存記憶體位置
       result.modifyValue = modifyValue
       result.value = modifyValue
       result.modifyState = false
-      let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
+      const newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
       this.setState({
         todoList: newTodoList,
         modifyState: false
+
       })
     } else alert('請輸入修改資料')
   }
   render() {
-    const { inputValue, todoList, progress, history, modifyState } = this.state
+    const { inputValue, todoList, progress, history, modifyState, step } = this.state
     const { classes } = this.props
-    console.log(history)
+    console.log(step, history)
     return (
       <div className="App">
         <AppBar position="static" color="default" className={classes.root}>
