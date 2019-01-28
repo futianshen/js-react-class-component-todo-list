@@ -3,7 +3,7 @@ import { withStyles } from '@material-ui/core'
 import { Card , CardContent } from '@material-ui/core'
 import { LinearProgress } from '@material-ui/core'
 import { FormControlLabel, Checkbox,  List, ListItem } from '@material-ui/core'
-import { Button } from '@material-ui/core'
+import { Button, Switch } from '@material-ui/core'
 
 const styles = theme => ({
   root: {
@@ -16,15 +16,15 @@ const styles = theme => ({
 
 class DeleteItem extends Component {
   render() {
-    const { value, removeTodoTrigger } = this.props
+    const { value, removeTodoTrigger, modifyTodoTrigger } = this.props
     return (
       <Fragment>
-        <p>{value}</p>
+        <p onDoubleClick={modifyTodoTrigger}>{value}</p>
         <Button
           variant="outlined"
           color="secondary"
           onClick={removeTodoTrigger}
-          >
+        >
           刪除
         </Button>
       </Fragment>
@@ -45,6 +45,9 @@ class ModifyItem extends Component {
       modifyValue: e.target.value
     })
   }
+  modifySubmit = e => {
+    if(e.keyCode===13) this.modifyTodoDoneTrigger()
+  }
   modifyTodoDoneTrigger = () => {
     const { modifyValue } = this.state
     const { modifyTodoDone, todo } = this.props
@@ -54,7 +57,11 @@ class ModifyItem extends Component {
     const { modifyValue } = this.state
     return (
       <Fragment>
-        <input value={modifyValue} onChange={this.modifyChange} />
+        <input 
+          value={modifyValue} 
+          onChange={this.modifyChange}
+          onKeyUp={this.modifySubmit}
+        />
         <Button
           variant="outlined"
           color="primary"
@@ -80,8 +87,12 @@ class Item extends Component {
     if(window.confirm('確定要刪除嗎？')) removeTodo(todo)
   }
   modifyTodoTrigger = () => {
-    const { modifyTodo, todo } = this.props
-    modifyTodo(todo)
+    const { modifyState } = this.props
+    console.log(modifyState)
+    if(!modifyState) {
+      const { modifyTodo, todo } = this.props
+      modifyTodo(todo)
+    }
   }
   completeModifyTodoTrigger = () => {
     const { completeModifyTodo, todo } = this.props
@@ -90,11 +101,12 @@ class Item extends Component {
   render() {
     const { value, checked, todo, modifyValue, modifyTodoDone } = this.props
     return (
-      <ListItem onDoubleClick={this.modifyTodoTrigger}>
+      <ListItem>
         <FormControlLabel
           control={
             <Checkbox
               checked={checked}
+              color="primary"
               onChange={this.checkTodoTrigger}
             />
           }
@@ -109,6 +121,7 @@ class Item extends Component {
           <DeleteItem 
             value={value} 
             removeTodoTrigger={this.removeTodoTrigger}
+            modifyTodoTrigger={this.modifyTodoTrigger}
           />
         }
       </ListItem>
@@ -148,11 +161,9 @@ class TodoList extends Component {
   }
   render() {
     const { listState } = this.state
-    const { classes, todoList, progress } = this.props
-    console.log(todoList)
-    console.log(listState)
+    const { classes, todoList, progress, modifyState } = this.props
     let todolist = listState ? 
-      (listState%2 ? 
+      (listState % 2 ? 
         todoList.filter(item=>item.checked===true) : todoList.filter(item=>item.checked===false)
       ) 
     : todoList
@@ -161,7 +172,8 @@ class TodoList extends Component {
       <Card>
         <LinearDeterminate progress={progress} />
         <Button 
-          variant="contained" 
+          variant="contained"
+          color={listState===0 ? "primary" : "default"}
           className={classes.button}
           onClick={this.allList}
         >
@@ -169,24 +181,25 @@ class TodoList extends Component {
         </Button>
         <Button 
           variant="contained"
-          color="primary" 
+          color={listState===1 ? "primary" : "default"}
           className={classes.button} 
           onClick={this.completeList}
         >
           完成
         </Button>
         <Button 
-          variant="contained" 
-          color="secondary"
+          variant="contained"
+          color={listState===2 ? "primary" : "default"}
           className={classes.button} 
           onClick={this.uncompleteList}
         >
           未完成
         </Button>
+        <Switch defaultChecked value="checkedF" color="default" />
         <CardContent>
           <List>
             {todolist.map(item =>
-              <Item 
+              <Item
                 key={item.id}
                 checked={item.checked}
                 value={item.value}
@@ -194,6 +207,8 @@ class TodoList extends Component {
                 todo={item}
                 checkTodo={checkTodo}
                 removeTodo={removeTodo}
+
+                modifyState={modifyState}
                 modifyTodo={modifyTodo}
                 modifyTodoDone={modifyTodoDone}
               />
