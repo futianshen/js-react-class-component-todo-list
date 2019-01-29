@@ -22,11 +22,14 @@ class App extends Component {
       progress: 100, //改名成 totalCompletePercent 會更好
       todoList: [],// 這個可不可以併到 history 物件裡面？
       id: 0, // id 可以寫在外面嗎？怎麼做？參考 huli Sample Code
-      step: 0,
+
+      historyStep: 0,
       history: [[]],
+      isHistoryRecord: true,
+      
+      darkMode: false,
       checkToggle: false,
-      modifyState: false,
-      isHistoryRecord: true
+      modifyState: false
     }
   }
   componentDidUpdate(prevProps, prevState) {
@@ -38,57 +41,50 @@ class App extends Component {
     }
     //記錄 history
     const { isHistoryRecord } = this.state
-    const { history, step } = this.state
     if(isHistoryRecord) {
-      if(isHistoryRecord!==prevState.isHistoryRecord) {
-        //在過去版本刪除未來紀錄
+      const { history, historyStep } = this.state
+      //新增、刪除 
+      if(todoList.length!==prevState.todoList.length) {
         this.setState({
-          history: history.filter((todoList, index)=> index<=step)
+          historyStep: historyStep+1,
+          history: [...history, todoList]
         })
-      } else {
-        //新增、刪除 
-        if(todoList.length!==prevState.todoList.length) {
-          this.setState({
-            step: step+1,
-            history: [...history, todoList]
-          })
-        }
-        //Check
-        const { checkToggle } = this.state
-        if(checkToggle!==prevState.checkToggle) {
-          this.setState({
-            step: step+1,
-            history: [...history, todoList]
-          })
-        }
-        //修改完成
-        const { modifyState } = this.state
-        if(modifyState!==prevState.modifyState && !modifyState ) {
-          this.setState({
-            step: step+1,
-            history: [...history, todoList]
-          })
-        }
+      }
+      //Check
+      const { checkToggle } = this.state
+      if(checkToggle!==prevState.checkToggle) {
+        this.setState({
+          historyStep: historyStep+1,
+          history: [...history, todoList]
+        })
+      }
+      //修改完成
+      const { modifyState } = this.state
+      if(modifyState!==prevState.modifyState && !modifyState) {
+        this.setState({
+          historyStep: historyStep+1,
+          history: [...history, todoList]
+        })
       }
     }
   }
   undo = () => {
-    const { history, step } = this.state
-    if(1<=step) {
-      const todoList = [...history[step-1]]
+    const { history, historyStep } = this.state
+    if(1<=historyStep) {
+      const todoList = [...history[historyStep-1]]
       this.setState({
-        step: step-1,
+        historyStep: historyStep-1,
         todoList,
         isHistoryRecord: false
       })
     }
   }
   redo = () => {
-    const { history, step } = this.state
-    if(step<=history.length-2) {
-      const todoList = [...history[step+1]]
+    const { history, historyStep } = this.state
+    if(historyStep<=history.length-2) {
+      const todoList = [...history[historyStep+1]]
       this.setState({
-        step: step+1,
+        historyStep: historyStep+1,
         todoList,
         isHistoryRecord: false
       })
@@ -104,8 +100,11 @@ class App extends Component {
   }
   addTodo = () => { // react 命名的慣例是什麼？ todoAdd？
     const { todoList, id, inputValue } = this.state
+    const { history, historyStep } = this.state
     if(inputValue!=='') {
       this.setState({
+        //在過去版本刪除未來紀錄
+        history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
         todoList: [...todoList, 
           {
             id,
@@ -129,7 +128,10 @@ class App extends Component {
     //let result = todoList.find(item=>item.id===todo.id)
     //result.checked = !result.checked
     let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
+    const { history, historyStep } = this.state
     this.setState({
+      //在過去版本刪除未來紀錄
+      history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
       todoList: newTodoList,
       checkToggle: !checkToggle,
       isHistoryRecord: true
@@ -137,7 +139,10 @@ class App extends Component {
   }
   removeTodo = todo => {
     const { todoList } = this.state
+    const { history, historyStep } = this.state
     this.setState({
+      //在過去版本刪除未來紀錄
+      history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
       todoList: todoList.filter(item=>item.id!==todo.id),
       isHistoryRecord: true
     })
@@ -163,17 +168,19 @@ class App extends Component {
       result.value = modifyValue
       result.modifyState = false
       const newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
+      const { history, historyStep } = this.state
       this.setState({
+        //在過去版本刪除未來紀錄
+        history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
         todoList: newTodoList,
-        modifyState: false
-
+        modifyState: false,
+        isHistoryRecord: true
       })
     } else alert('請輸入修改資料')
   }
   render() {
-    const { inputValue, todoList, progress, history, modifyState, step } = this.state
+    const { inputValue, todoList, progress, history, modifyState, historyStep } = this.state
     const { classes } = this.props
-    console.log(step, history)
     return (
       <div className="App">
         <AppBar position="static" color="default" className={classes.root}>
@@ -211,4 +218,8 @@ function resetProgress(todoList) {
     }
     let percent = checkedNumber/todoList.length*100
     return percent
+}
+
+function deleteFutureRecord(history, historyStep) {
+  return history.filter((todoList, index) => index<=historyStep)
 }

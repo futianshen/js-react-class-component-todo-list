@@ -67,7 +67,7 @@ class ModifyItem extends Component {
           color="primary"
           onClick={this.modifyTodoDoneTrigger} 
         >
-          修改
+          {修改}
         </Button>
       </Fragment>
     )
@@ -75,9 +75,6 @@ class ModifyItem extends Component {
 }
 
 class Item extends Component {
-  constructor(props) {
-    super(props)
-  }
   checkTodoTrigger = () => {
     const { checkTodo, todo } = this.props
     checkTodo(todo)
@@ -88,7 +85,6 @@ class Item extends Component {
   }
   modifyTodoTrigger = () => {
     const { modifyState } = this.props
-    console.log(modifyState)
     if(!modifyState) {
       const { modifyTodo, todo } = this.props
       modifyTodo(todo)
@@ -195,7 +191,7 @@ class TodoList extends Component {
         >
           未完成
         </Button>
-        <Switch defaultChecked value="checkedF" color="default" />
+        <Switch defaultChecked value="checkedT" color="default"/>
         <CardContent>
           <List>
             {todolist.map(item =>
