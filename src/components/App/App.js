@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import './App.css'
 import { AppBar, Toolbar, withStyles } from '@material-ui/core'
-import { Input, Button } from '@material-ui/core'
+import { TextField, Button } from '@material-ui/core'
 import TodoList from '../TodoList'
-import { Redo, Undo } from '@material-ui/icons'
+import { Delete, Redo, Undo } from '@material-ui/icons'
 
 const styles = theme => ({
   root: {
@@ -17,11 +17,12 @@ const styles = theme => ({
 class App extends Component {
   constructor() {
     super()
-    this.state = {
+    this.state = { //  如何整理 state 的資料，將相關資料整理成物件？
       inputValue: '',
       progress: 100, //改名成 totalCompletePercent 會更好
       todoList: [],// 這個可不可以併到 history 物件裡面？
-      id: 0, // id 可以寫在外面嗎？怎麼做？參考 huli Sample Code
+      
+      id: 0, // id 可以寫在外面嗎？怎麼做？參考 huli Sample Code。為什麼胡立的 id 要寫在外面？ 如果 id 應該寫在外面，那還有哪些狀態也應該寫在外面？ darkMode, checkToggle, modifyState, isHistoryRecord, historyStep。寫在 this.state 外面和裡面的判斷標準是什麼？ 需不需要 rerender？
 
       historyStep: 0,
       history: [[]],
@@ -30,6 +31,22 @@ class App extends Component {
       darkMode: false,
       checkToggle: false,
       modifyState: false
+    }
+    //跟 render 沒有關係的狀態放這裡
+  }
+  componentDidMount() {
+    window.addEventListener("beforeunload", e => {
+      const { todoList, id } = this.state
+      window.localStorage.setItem('todoList', JSON.stringify(todoList))
+      window.localStorage.setItem('id', id)
+    })
+    const todoList = window.localStorage.getItem('todoList')
+    const id = window.localStorage.getItem('id')
+    if(todoList && id) {
+      this.setState({
+        id: id,
+        todoList: JSON.parse(todoList)
+      })
     }
   }
   componentDidUpdate(prevProps, prevState) {
@@ -68,6 +85,11 @@ class App extends Component {
       }
     }
   }
+  deleteTodoList = () => {
+    this.setState({
+      todoList: []
+    })
+  }
   undo = () => {
     const { history, historyStep } = this.state
     if(1<=historyStep) {
@@ -90,6 +112,12 @@ class App extends Component {
       })
     }
   }
+  toggleDarkMode = () => {
+    const { darkMode } = this.state
+    this.setState({
+      darkMode: !darkMode
+    })
+  }
   inputChange = e => { // 這種使用arrow function寫法叫什麼？
     this.setState({
       inputValue: e.target.value
@@ -103,7 +131,7 @@ class App extends Component {
     const { history, historyStep } = this.state
     if(inputValue!=='') {
       this.setState({
-        //在過去版本刪除未來紀錄
+        //在過去版本新增資料，就刪除未來紀錄
         history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
         todoList: [...todoList, 
           {
@@ -130,7 +158,7 @@ class App extends Component {
     let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
     const { history, historyStep } = this.state
     this.setState({
-      //在過去版本刪除未來紀錄
+      //在過去版本 check，就刪除未來紀錄
       history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
       todoList: newTodoList,
       checkToggle: !checkToggle,
@@ -141,7 +169,7 @@ class App extends Component {
     const { todoList } = this.state
     const { history, historyStep } = this.state
     this.setState({
-      //在過去版本刪除未來紀錄
+      //在過去版本移除資料，就刪除未來紀錄。
       history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
       todoList: todoList.filter(item=>item.id!==todo.id),
       isHistoryRecord: true
@@ -170,7 +198,7 @@ class App extends Component {
       const newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
       const { history, historyStep } = this.state
       this.setState({
-        //在過去版本刪除未來紀錄
+        //在過去版本修改資料，就刪除未來紀錄。
         history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
         todoList: newTodoList,
         modifyState: false,
@@ -179,20 +207,27 @@ class App extends Component {
     } else alert('請輸入修改資料')
   }
   render() {
-    const { inputValue, todoList, progress, history, modifyState, historyStep } = this.state
+    const { inputValue, todoList, progress, darkMode, modifyState } = this.state
     const { classes } = this.props
+
+    window.addEventListener("beforeunload", e => {  
+      e.preventDefault()
+      return e.returnValue = 'Are you sure you want to close?';
+    })
     return (
       <div className="App">
         <AppBar position="static" color="default" className={classes.root}>
           <Toolbar>React Todo</Toolbar>
         </AppBar>
+        <Delete onClick={this.deleteTodoList} />
         <Undo onClick={this.undo} />
         <Redo onClick={this.redo} />
-        <Input 
-          placeholder="Input something to do"
-          value={inputValue} 
+        <TextField
+          label="Todo"
+          value={inputValue}
           onChange={this.inputChange} 
-          onKeyUp={this.inputSubmit} />
+          onKeyUp={this.inputSubmit} 
+        />
         <Button onClick={this.addTodo}>Add</Button>
         <TodoList 
           todoList={todoList} 
@@ -200,6 +235,8 @@ class App extends Component {
           checkTodo={this.checkTodo}
           removeTodo={this.removeTodo}
 
+          darkMode={darkMode}
+          toggleDarkMode={this.toggleDarkMode}
           modifyState={modifyState}
           modifyTodo={this.modifyTodo}
           modifyTodoDone={this.modifyTodoDone}

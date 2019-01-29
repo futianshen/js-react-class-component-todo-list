@@ -67,7 +67,7 @@ class ModifyItem extends Component {
           color="primary"
           onClick={this.modifyTodoDoneTrigger} 
         >
-          {修改}
+          修改
         </Button>
       </Fragment>
     )
@@ -95,14 +95,14 @@ class Item extends Component {
     completeModifyTodo(todo)
   }
   render() {
-    const { value, checked, todo, modifyValue, modifyTodoDone } = this.props
+    const { value, checked, todo, modifyValue, modifyTodoDone ,darkMode } = this.props
     return (
       <ListItem>
         <FormControlLabel
           control={
             <Checkbox
               checked={checked}
-              color="primary"
+              color={darkMode ? "secondary" : "primary" }
               onChange={this.checkTodoTrigger}
             />
           }
@@ -121,14 +121,6 @@ class Item extends Component {
           />
         }
       </ListItem>
-    )
-  }
-}
-
-class LinearDeterminate extends Component { // 可以用 functional Component
-  render() {
-    return (
-      <LinearProgress variant="determinate" value={this.props.progress} />
     )
   }
 }
@@ -156,6 +148,7 @@ class TodoList extends Component {
     })
   }
   render() {
+    //  切換完成 / 未完成
     const { listState } = this.state
     const { classes, todoList, progress, modifyState } = this.props
     let todolist = listState ? 
@@ -163,13 +156,18 @@ class TodoList extends Component {
         todoList.filter(item=>item.checked===true) : todoList.filter(item=>item.checked===false)
       ) 
     : todoList
-    const { checkTodo, removeTodo, modifyTodo, modifyTodoDone } = this.props
+    const { checkTodo, removeTodo, modifyTodo, modifyTodoDone, darkMode } = this.props
     return (
       <Card>
-        <LinearDeterminate progress={progress} />
+        {darkMode ? 
+          <LinearProgress value={progress} variant="determinate" color="secondary" />
+          :
+          <LinearProgress value={progress} variant="determinate" color="primary"/>
+        }  
+        
         <Button 
           variant="contained"
-          color={listState===0 ? "primary" : "default"}
+          color={listState===0 ? (darkMode ? "secondary" : "primary") : "default"}
           className={classes.button}
           onClick={this.allList}
         >
@@ -177,7 +175,7 @@ class TodoList extends Component {
         </Button>
         <Button 
           variant="contained"
-          color={listState===1 ? "primary" : "default"}
+          color={listState===1 ? (darkMode ? "secondary" : "primary") : "default"}
           className={classes.button} 
           onClick={this.completeList}
         >
@@ -185,13 +183,18 @@ class TodoList extends Component {
         </Button>
         <Button 
           variant="contained"
-          color={listState===2 ? "primary" : "default"}
+          color={listState===2 ? (darkMode ? "secondary" : "primary") : "default"}
           className={classes.button} 
           onClick={this.uncompleteList}
         >
           未完成
         </Button>
-        <Switch defaultChecked value="checkedT" color="default"/>
+        <Switch 
+          checked={darkMode} 
+          color="default"
+          //color={darkMode ? "secondary" : "primary"}
+          onClick={this.props.toggleDarkMode}
+        />
         <CardContent>
           <List>
             {todolist.map(item =>
@@ -203,6 +206,8 @@ class TodoList extends Component {
                 todo={item}
                 checkTodo={checkTodo}
                 removeTodo={removeTodo}
+
+                darkMode={darkMode}
 
                 modifyState={modifyState}
                 modifyTodo={modifyTodo}
