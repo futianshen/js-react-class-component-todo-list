@@ -15,6 +15,7 @@ const styles = theme => ({
     margin: "0 auto 100px"
   },
   icon: {
+    cursor: "pointer",
     transition: ".3s",
     '&:hover': {
       opacity: '0.6'
@@ -29,6 +30,7 @@ const styles = theme => ({
     justifyContent: "space-between",
   },
   delete: {
+    cursor: "pointer",
     width: "55px",
     transition: ".3s",
     '&:hover': {
