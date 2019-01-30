@@ -17,21 +17,21 @@ const styles = () => ({
 
 class TodoInput extends Component {
   render() {
-    const { inputValue, inputChange, inputSubmit, addTodo, classes } = this.props
+    const { classes, inputValue, inputChange, addTodoSubmit, addTodo } = this.props
     return (
       <div className={classes.input}>
         <TextField
           label="Todo"
+          className={classes.textField}
           value={inputValue}
           onChange={inputChange} 
-          onKeyUp={inputSubmit}
-          className={classes.textField}
+          onKeyUp={addTodoSubmit}      
         />
-        <Button 
-          onClick={addTodo}
+        <Button
+          className={classes.buttonAdd}
           variant="contained"
           color="primary"
-          className={classes.buttonAdd}
+          onClick={addTodo}
         >
           Add
         </Button>
@@ -40,4 +40,4 @@ class TodoInput extends Component {
   }
 }
 
-export default withStyles(styles)(TodoInput);
+export default withStyles(styles)(TodoInput)

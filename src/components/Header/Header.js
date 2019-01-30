@@ -15,15 +15,18 @@ const styles = () => ({
 
 class Header extends Component {
   render() {
-    const { classes, darkMode, toggleDarkMode } = this.props
+    const { classes, isDarkMode, toggleDarkMode } = this.props
     return(
-      <AppBar position="static" color="default" className={classes.appbar} >
+      <AppBar 
+        position="static" 
+        color="default" 
+        className={classes.appbar} 
+      >
         <Toolbar className={classes.header}>
           React Todo
-          <Switch 
-            checked={darkMode} 
+          <Switch
             color="default"
-            //color={darkMode ? "secondary" : "primary"}
+            checked={isDarkMode} 
             onClick={toggleDarkMode}
           />
         </Toolbar>

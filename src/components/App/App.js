@@ -15,50 +15,51 @@ const darkTheme = createMuiTheme({
     type: 'dark'
   }
 })
-
 const styles = () => ({
   lightTheme: {
-    height: "100%",
     color: "#666"
   },
   darkTheme: {
-    height: "100%",
-    color: "#ccc"
+    color: "#eee"
   }
 })
 
 class App extends Component {
   constructor() {
     super()
-    this.state = { //  如何整理 state 的資料，將相關資料整理成物件？
+    this.state = { 
       inputValue: '',
-      progress: 100, //改名成 totalCompletePercent 會更好
-      todoList: [],// 這個可不可以併到 history 物件裡面？
-      
-      id: 0, // id 可以寫在外面嗎？怎麼做？參考 huli Sample Code。為什麼胡立的 id 要寫在外面？ 如果 id 應該寫在外面，那還有哪些狀態也應該寫在外面？ darkMode, checkToggle, modifyState, isHistoryRecord, historyStep。寫在 this.state 外面和裡面的判斷標準是什麼？ 需不需要 rerender？
+      progress: 100,
+      todoList: [],
+      id: 0,
 
       historyStep: 0,
       history: [[]],
-      isHistoryRecord: true,
+      isRecordingHistory: true,
       
-      darkMode: false, //isDarkMode
-      checkToggle: false, 
-      modifyState: false //isModifying
+      checkSwitch: false,
+      isDarkMode: false, 
+      isModifying: false
     }
-    //跟 render 沒有關係的狀態放這裡
+    //跟 render 沒有關係的狀態可以放這裡
   }
   componentDidMount() {
+    //關閉分頁：將 todolist 資料存到 Local Storage
     window.addEventListener("unload", () => {
-      const { todoList, id } = this.state
+      const { todoList, id, isDarkMode } = this.state
       window.localStorage.setItem('todoList', JSON.stringify(todoList))
       window.localStorage.setItem('id', id)
+      window.localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode))
     })
-    const todoList = JSON.parse(window.localStorage.getItem('todoList'))
+    //開啟分頁：將 todolist 資料從 Local Storage 取出
     const id = window.localStorage.getItem('id')
+    const todoList = JSON.parse(window.localStorage.getItem('todoList'))
+    const isDarkMode = JSON.parse(window.localStorage.getItem('isDarkMode'))
     if(todoList && id) {
       this.setState({
-        id: id,
-        todoList
+        id,
+        todoList,
+        isDarkMode
       })
     }
   }
@@ -69,28 +70,35 @@ class App extends Component {
       if(todoList.length!==0) this.setState({progress: resetProgress(todoList)})
       else this.setState({progress: 100})
     }
+
+    //isDarkMode <body> background
+    const { isDarkMode } = this.state
+    const body = document.querySelector('body')
+    if(isDarkMode) body.style.backgroundColor = "#333"
+    else body.style.backgroundColor = "#fff"
+
     //記錄 history
-    const { isHistoryRecord } = this.state
-    if(isHistoryRecord) {
+    const { isRecordingHistory } = this.state
+    if(isRecordingHistory) {
       const { history, historyStep } = this.state
-      //新增、刪除 
+      //新增、刪除後
       if(todoList.length!==prevState.todoList.length) {
         this.setState({
           historyStep: historyStep+1,
           history: [...history, todoList]
         })
       }
-      //Check
-      const { checkToggle } = this.state
-      if(checkToggle!==prevState.checkToggle) {
+      //Check 觸發
+      const { checkSwitch } = this.state
+      if(checkSwitch!==prevState.checkSwitch) {
         this.setState({
           historyStep: historyStep+1,
           history: [...history, todoList]
         })
       }
       //修改完成
-      const { modifyState } = this.state
-      if(modifyState!==prevState.modifyState && !modifyState) {
+      const { isModifying } = this.state
+      if(isModifying!==prevState.isModifying && !isModifying) {
         this.setState({
           historyStep: historyStep+1,
           history: [...history, todoList]
@@ -98,14 +106,12 @@ class App extends Component {
       }
     }
   }
-  deleteTodoList = () => {
-    window.localStorage.removeItem('todoList')
-    window.localStorage.removeItem('id')
-    if(window.confirm("確定要將 Todo List 的資料全部刪除？")) {
-      this.setState({
-        todoList: []
-      })
-    }
+
+  toggleDarkMode = () => {
+    const { isDarkMode } = this.state
+    this.setState({
+      isDarkMode: !isDarkMode
+    })
   }
   undo = () => {
     const { history, historyStep } = this.state
@@ -114,7 +120,7 @@ class App extends Component {
       this.setState({
         historyStep: historyStep-1,
         todoList,
-        isHistoryRecord: false
+        isRecordingHistory: false //停止紀錄歷史
       })
     }
   }
@@ -125,65 +131,65 @@ class App extends Component {
       this.setState({
         historyStep: historyStep+1,
         todoList,
-        isHistoryRecord: false
+        isRecordingHistory: false  //停止紀錄歷史
       })
     }
   }
-  toggleDarkMode = () => {
-    const { darkMode } = this.state
-    this.setState({
-      darkMode: !darkMode
-    })
-    let body = document.querySelector('body')
-    if(darkMode) body.style.backgroundColor = "#fff"
-    else body.style.backgroundColor = "#333"
+  deleteTodoList = () => {
+    if(window.confirm("確定要將 Todo List 的資料全部刪除？")) {
+      window.localStorage.removeItem('todoList')
+      window.localStorage.removeItem('id')
+      window.localStorage.removeItem('isDarkMode')
+      this.setState({
+        todoList: []
+      })
+    }
   }
   inputChange = e => { // 這種使用arrow function寫法叫什麼？
     this.setState({
       inputValue: e.target.value
     })
   }
-  inputSubmit = e => {
-    console.log(e)
-    if(e.keyCode===13) this.addTodo()
-  }
+  addTodoSubmit = e => e.keyCode===13 ? this.addTodo() : 0
   addTodo = () => { // react 命名的慣例是什麼？ todoAdd？
     const { todoList, id, inputValue } = this.state
     const { history, historyStep } = this.state
     if(inputValue!=='') {
       this.setState({
-        //在過去版本新增資料，就刪除未來紀錄
+        //如果在過去版本新增資料，就刪除未來紀錄。
         history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
         todoList: [...todoList, 
           {
             id,
-            value: inputValue,
+            //value 和 modifyValue 可以只留一個就好？
+            value: inputValue, 
             modifyValue: inputValue,
-            modifyState: false,
+            isModifying: false,
             checked: false,
           }
         ],
         inputValue: '',
         id: id+1,
-        isHistoryRecord: true
+        isRecordingHistory: true  //恢復紀錄歷史
       })
     } else alert('請輸入內容')
   }
+
   checkTodo = todo => {
-    const { todoList, checkToggle } = this.state
+    const { todoList, checkSwitch } = this.state
     let result = {...todoList.find(item=>item.id===todo.id)}
     result.checked = !result.checked
-    //上下比對會發生什麼問題？跟物件指向記憶體位置有關
+    //上下比對看看會發生什麼問題？跟物件指向記憶體位置有關
     //let result = todoList.find(item=>item.id===todo.id)
     //result.checked = !result.checked
-    let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
     const { history, historyStep } = this.state
     this.setState({
       //在過去版本 check，就刪除未來紀錄
       history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
-      todoList: newTodoList,
-      checkToggle: !checkToggle,
-      isHistoryRecord: true
+      //check todo
+      todoList: todoList.map(item=>item.id===todo.id ? result : item),
+      checkSwitch: !checkSwitch,
+      isRecordingHistory: true  //恢復紀錄歷史
     })
   }
   removeTodo = todo => {
@@ -193,20 +199,19 @@ class App extends Component {
       //在過去版本移除資料，就刪除未來紀錄。
       history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
       todoList: todoList.filter(item=>item.id!==todo.id),
-      isHistoryRecord: true
+      isRecordingHistory: true  //恢復紀錄歷史
     })
   }
   modifyTodo = todo => {
     const { todoList } = this.state
     let result = {...todoList.find(item=>item.id===todo.id)}
-    result.modifyState = true
-    //上下比對會發生什麼問題？跟物件指向記憶體位置有關
+    result.isModifying = true
+    //上下比對看看會發生什麼問題？跟物件指向記憶體位置有關
     //let result = todoList.find(item=>item.id===todo.id)
-    //result.modifyState = true
-    let newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
+    //result.isModifying = true
     this.setState({
-      todoList: newTodoList,
-      modifyState: true
+      todoList: todoList.map(item=>item.id===todo.id ? result : item),
+      isModifying: true  //一次只能有一個 Todo 進行修改
     })
   }
   modifyTodoDone = (todo, modifyValue) => {
@@ -215,43 +220,44 @@ class App extends Component {
       let result = {...todoList.find(item=>item.id===todo.id)}  //原因物件存記憶體位置
       result.modifyValue = modifyValue
       result.value = modifyValue
-      result.modifyState = false
+      result.isModifying = false
       const newTodoList = todoList.map(item=>item.id===todo.id ? result : item)
       const { history, historyStep } = this.state
       this.setState({
         //在過去版本修改資料，就刪除未來紀錄。
         history: historyStep<history.length-1 ? deleteFutureRecord(history, historyStep) : history,
         todoList: newTodoList,
-        modifyState: false,
-        isHistoryRecord: true
+        isModifying: false,
+        isRecordingHistory: true
       })
     } else alert('請輸入修改資料')
   }
   render() {
-    const { inputValue, todoList, progress, darkMode, modifyState } = this.state
+    const { isDarkMode, isModifying, inputValue, todoList, progress } = this.state
     const { classes } = this.props
     return (
-      <MuiThemeProvider theme={ darkMode ? darkTheme : lightTheme } className={ darkMode ? classes.darkTheme: classes.lightTheme }  >
-        <div className={ darkMode ? classes.darkTheme: classes.lightTheme }>
+      <MuiThemeProvider theme={ isDarkMode ? darkTheme : lightTheme} >
+        <div className={ isDarkMode ? classes.darkTheme: classes.lightTheme }>
           <Header 
-            darkMode={darkMode}
+            isDarkMode={isDarkMode}
             toggleDarkMode={this.toggleDarkMode}
           />
         
-          <TodoInput 
+          <TodoInput
+            isDarkMode={isDarkMode}
             inputValue={inputValue}
-            darkMode={darkMode}
   
             inputChange={this.inputChange}
             addTodo={this.addTodo}
-            inputSubmit={this.inputSubmit}
+            addTodoSubmit={this.addTodoSubmit}
           />
-          <TodoList 
+
+          <TodoList
+            isDarkMode={isDarkMode}
+            isModifying={isModifying}
             todoList={todoList} 
             progress={progress}
-            darkMode={darkMode}
-            modifyState={modifyState}
-
+            
             undo={this.undo}
             redo={this.redo}
             deleteTodoList={this.deleteTodoList}
@@ -260,6 +266,7 @@ class App extends Component {
             modifyTodo={this.modifyTodo}
             modifyTodoDone={this.modifyTodoDone}
           />
+
         </div>
       </MuiThemeProvider>
     )
@@ -267,12 +274,12 @@ class App extends Component {
 }
 
 function resetProgress(todoList) {
+  //這邊如果用內建函式可以怎麼寫？
   let checkedNumber = 0
-    for(let i=0; i<todoList.length; i++) {
-      if(todoList[i].checked) checkedNumber++
-    }
-    let percent = checkedNumber/todoList.length*100
-    return percent
+  for(let i=0; i<todoList.length; i++) { 
+    if(todoList[i].checked) checkedNumber++
+  }
+  return checkedNumber/todoList.length*100
 }
 
 function deleteFutureRecord(history, historyStep) {
@@ -280,4 +287,3 @@ function deleteFutureRecord(history, historyStep) {
 }
 
 export default withStyles(styles)(App)
-
