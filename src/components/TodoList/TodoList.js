@@ -220,6 +220,7 @@ class TodoList extends Component {
           </div>
           <Delete className={classes.delete} onClick={deleteTodoList} />
         </CardContent>
+        
         <CardContent>
           <List>
             {todolist.map(item =>
