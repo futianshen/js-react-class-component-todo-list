@@ -1,16 +1,31 @@
 import React, { Component } from 'react'
 import './App.css'
-import { AppBar, Toolbar, withStyles } from '@material-ui/core'
-import { TextField, Button } from '@material-ui/core'
+import Header from '../Header'
+import TodoInput from '../TodoInput'
 import TodoList from '../TodoList'
-import { Delete, Redo, Undo } from '@material-ui/icons'
+import { MuiThemeProvider, createMuiTheme, withStyles } from '@material-ui/core/styles'
 
-const styles = theme => ({
-  root: {
-    flexGrow: 1,
+const lightTheme = createMuiTheme({
+  palette: {
+    type: 'light'
+  }
+})
+const darkTheme = createMuiTheme({
+  palette: {
+    type: 'dark'
+  }
+})
+
+const styles = () => ({
+  lightTheme: {
+    height: "100%",
+    backgroundColor: "#fff",
+    color: "#666"
   },
-  button: {
-    margin: theme.spacing.unit,
+  darkTheme: {
+    height: "100%",
+    backgroundColor: "#222",
+    color: "#ccc"
   }
 })
 
@@ -28,24 +43,24 @@ class App extends Component {
       history: [[]],
       isHistoryRecord: true,
       
-      darkMode: false,
-      checkToggle: false,
-      modifyState: false
+      darkMode: false, //isDarkMode
+      checkToggle: false, 
+      modifyState: false //isModifying
     }
     //跟 render 沒有關係的狀態放這裡
   }
   componentDidMount() {
-    window.addEventListener("beforeunload", e => {
+    window.addEventListener("unload", () => {
       const { todoList, id } = this.state
       window.localStorage.setItem('todoList', JSON.stringify(todoList))
       window.localStorage.setItem('id', id)
     })
-    const todoList = window.localStorage.getItem('todoList')
+    const todoList = JSON.parse(window.localStorage.getItem('todoList'))
     const id = window.localStorage.getItem('id')
     if(todoList && id) {
       this.setState({
         id: id,
-        todoList: JSON.parse(todoList)
+        todoList
       })
     }
   }
@@ -86,9 +101,13 @@ class App extends Component {
     }
   }
   deleteTodoList = () => {
-    this.setState({
-      todoList: []
-    })
+    window.localStorage.removeItem('todoList')
+    window.localStorage.removeItem('id')
+    if(window.confirm("確定要將 Todo List 的資料全部刪除？")) {
+      this.setState({
+        todoList: []
+      })
+    }
   }
   undo = () => {
     const { history, historyStep } = this.state
@@ -124,6 +143,7 @@ class App extends Component {
     })
   }
   inputSubmit = e => {
+    console.log(e)
     if(e.keyCode===13) this.addTodo()
   }
   addTodo = () => { // react 命名的慣例是什麼？ todoAdd？
@@ -209,44 +229,41 @@ class App extends Component {
   render() {
     const { inputValue, todoList, progress, darkMode, modifyState } = this.state
     const { classes } = this.props
-
-    window.addEventListener("beforeunload", e => {  
-      e.preventDefault()
-      return e.returnValue = 'Are you sure you want to close?';
-    })
     return (
-      <div className="App">
-        <AppBar position="static" color="default" className={classes.root}>
-          <Toolbar>React Todo</Toolbar>
-        </AppBar>
-        <Delete onClick={this.deleteTodoList} />
-        <Undo onClick={this.undo} />
-        <Redo onClick={this.redo} />
-        <TextField
-          label="Todo"
-          value={inputValue}
-          onChange={this.inputChange} 
-          onKeyUp={this.inputSubmit} 
-        />
-        <Button onClick={this.addTodo}>Add</Button>
-        <TodoList 
-          todoList={todoList} 
-          progress={progress}
-          checkTodo={this.checkTodo}
-          removeTodo={this.removeTodo}
+      <MuiThemeProvider theme={ darkMode ? darkTheme : lightTheme }  >
+        <div className={ darkMode ? classes.darkTheme: classes.lightTheme }>
+          <Header 
+            darkMode={darkMode}
+            toggleDarkMode={this.toggleDarkMode}
+          />
+        
+          <TodoInput 
+            inputValue={inputValue}
+            darkMode={darkMode}
+  
+            inputChange={this.inputChange}
+            addTodo={this.addTodo}
+            inputSubmit={this.inputSubmit}
+          />
+          <TodoList 
+            todoList={todoList} 
+            progress={progress}
+            darkMode={darkMode}
+            modifyState={modifyState}
 
-          darkMode={darkMode}
-          toggleDarkMode={this.toggleDarkMode}
-          modifyState={modifyState}
-          modifyTodo={this.modifyTodo}
-          modifyTodoDone={this.modifyTodoDone}
-        />
-      </div>
+            undo={this.undo}
+            redo={this.redo}
+            deleteTodoList={this.deleteTodoList}
+            checkTodo={this.checkTodo}
+            removeTodo={this.removeTodo}
+            modifyTodo={this.modifyTodo}
+            modifyTodoDone={this.modifyTodoDone}
+          />
+        </div>
+      </MuiThemeProvider>
     )
   }
 }
-
-export default withStyles(styles)(App);
 
 function resetProgress(todoList) {
   let checkedNumber = 0
@@ -260,3 +277,6 @@ function resetProgress(todoList) {
 function deleteFutureRecord(history, historyStep) {
   return history.filter((todoList, index) => index<=historyStep)
 }
+
+export default withStyles(styles)(App)
+

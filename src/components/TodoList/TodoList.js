@@ -1,43 +1,94 @@
-import React, { Component, Fragment } from 'react' // Fragment 是什麼意思？
+import React, { Component } from 'react' // Fragment 是什麼意思？
 import { withStyles } from '@material-ui/core'
-import { Card , CardContent } from '@material-ui/core'
+import { Card, CardContent } from '@material-ui/core'
 import { LinearProgress } from '@material-ui/core'
 import { FormControlLabel, Checkbox,  List, ListItem } from '@material-ui/core'
-import { Button, Switch } from '@material-ui/core'
+import { Button } from '@material-ui/core'
+import { Delete, Redo, Undo } from '@material-ui/icons'
 
 const styles = theme => ({
-  root: {
-    flexGrow: 1,
-  },
   button: {
     margin: theme.spacing.unit,
+  },
+  todolist: {
+    maxWidth: "85%",
+    margin: "0 auto 100px"
+  },
+  icon: {
+    transition: ".3s",
+    '&:hover': {
+      opacity: '0.6'
+    },
+    '&:active': {
+      opacity: '0.9'
+    }
+  },
+  history: {
+    display: "flex",
+    width: "55px",
+    justifyContent: "space-between",
+  },
+  delete: {
+    width: "55px",
+    transition: ".3s",
+    '&:hover': {
+      opacity: '0.6'
+    },
+    '&:active': {
+      opacity: '0.9'
+    }
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between'
+  },
+  listItem: {
+    display: 'flex',
+    justifyContent: 'space-between'
+  },
+  modifyInputLight: {
+    border: "0",
+    outline: "0",
+    fontSize: '16px',
+    width: '160px',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    color: '#000'
+  },
+  modifyInputDark: {
+    border: "0",
+    outline: "0",
+    fontSize: '16px',
+    width: '160px',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    color: '#fff'
+  },
+  todoContent: {
+    display: 'flex',
+    justifyContent: 'space-between'
   }
 })
 
-class DeleteItem extends Component {
-  render() {
-    const { value, removeTodoTrigger, modifyTodoTrigger } = this.props
-    return (
-      <Fragment>
-        <p onDoubleClick={modifyTodoTrigger}>{value}</p>
-        <Button
-          variant="outlined"
-          color="secondary"
-          onClick={removeTodoTrigger}
-        >
-          刪除
-        </Button>
-      </Fragment>
-    )
-  }
-}
-
-class ModifyItem extends Component {
+class Item extends Component {
   constructor(props) { //只有在初始化需要 props 的時候才要塞 props
     super(props)
     const { modifyValue } = this.props
-    this.state={
+    this.state= {
       modifyValue: modifyValue
+    }
+  }
+  checkTodoTrigger = () => {
+    const { checkTodo, todo } = this.props
+    checkTodo(todo)
+  }
+  removeTodoTrigger = () => {
+    const { removeTodo, todo } = this.props
+    if(window.confirm('確定要刪除嗎？')) removeTodo(todo)
+  }
+  modifyTodoTrigger = () => {
+    const { modifyState } = this.props
+    if(!modifyState) {
+      const { modifyTodo, todo } = this.props
+      modifyTodo(todo)
     }
   }
   modifyChange = e => {
@@ -54,71 +105,47 @@ class ModifyItem extends Component {
     modifyTodoDone(todo, modifyValue)
   }
   render() {
+    const { value, checked, todo, classes, darkMode } = this.props
     const { modifyValue } = this.state
     return (
-      <Fragment>
-        <input 
-          value={modifyValue} 
-          onChange={this.modifyChange}
-          onKeyUp={this.modifySubmit}
-        />
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={this.modifyTodoDoneTrigger} 
-        >
-          修改
-        </Button>
-      </Fragment>
-    )
-  }
-}
-
-class Item extends Component {
-  checkTodoTrigger = () => {
-    const { checkTodo, todo } = this.props
-    checkTodo(todo)
-  }
-  removeTodoTrigger = () => {
-    const { removeTodo, todo } = this.props
-    if(window.confirm('確定要刪除嗎？')) removeTodo(todo)
-  }
-  modifyTodoTrigger = () => {
-    const { modifyState } = this.props
-    if(!modifyState) {
-      const { modifyTodo, todo } = this.props
-      modifyTodo(todo)
-    }
-  }
-  completeModifyTodoTrigger = () => {
-    const { completeModifyTodo, todo } = this.props
-    completeModifyTodo(todo)
-  }
-  render() {
-    const { value, checked, todo, modifyValue, modifyTodoDone ,darkMode } = this.props
-    return (
-      <ListItem>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={checked}
-              color={darkMode ? "secondary" : "primary" }
-              onChange={this.checkTodoTrigger}
-            />
-          }
-        />
-        {todo.modifyState ? 
-          <ModifyItem
-            todo={todo}
-            modifyValue={modifyValue}
-            modifyTodoDone={modifyTodoDone} 
-          /> 
-          : 
-          <DeleteItem 
-            value={value} 
-            removeTodoTrigger={this.removeTodoTrigger}
-            modifyTodoTrigger={this.modifyTodoTrigger}
+      <ListItem className={classes.listItem}>
+        <div className={classes.todoContent}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={checked}
+                color="primary"
+                onChange={this.checkTodoTrigger}
+              />
+            }
           />
+          {todo.modifyState ? 
+            <input
+              className={darkMode ? classes.modifyInputDark : classes.modifyInputLight}
+              value={modifyValue} 
+              onChange={this.modifyChange}
+              onKeyUp={this.modifySubmit}
+            />
+            :
+            <p onDoubleClick={this.modifyTodoTrigger}>{value}</p>
+          }
+        </div>
+        {todo.modifyState ? 
+          <Button
+            variant={darkMode ? "contained" : "outlined"}
+            color="primary"
+            onClick={this.modifyTodoDoneTrigger} 
+          >
+            修改
+          </Button>
+          :
+          <Button
+            variant={darkMode ? "contained" : "outlined"}
+            color="secondary"
+            onClick={this.removeTodoTrigger}
+          >
+            刪除
+          </Button>
         }
       </ListItem>
     )
@@ -132,17 +159,17 @@ class TodoList extends Component {
       listState: 0
     }
   }
-  allList = () => {
+  all = () => {
     this.setState({
       listState: 0
     })
   }
-  completeList = () => {
+  completed = () => {
     this.setState({
       listState: 1
     })
   }
-  uncompleteList = () => {
+  uncompleted = () => {
     this.setState({
       listState: 2
     })
@@ -158,56 +185,56 @@ class TodoList extends Component {
     : todoList
     const { checkTodo, removeTodo, modifyTodo, modifyTodoDone, darkMode } = this.props
     return (
-      <Card>
-        {darkMode ? 
-          <LinearProgress value={progress} variant="determinate" color="secondary" />
-          :
-          <LinearProgress value={progress} variant="determinate" color="primary"/>
-        }  
-        
-        <Button 
-          variant="contained"
-          color={listState===0 ? (darkMode ? "secondary" : "primary") : "default"}
-          className={classes.button}
-          onClick={this.allList}
-        >
-          全部
-        </Button>
-        <Button 
-          variant="contained"
-          color={listState===1 ? (darkMode ? "secondary" : "primary") : "default"}
-          className={classes.button} 
-          onClick={this.completeList}
-        >
-          完成
-        </Button>
-        <Button 
-          variant="contained"
-          color={listState===2 ? (darkMode ? "secondary" : "primary") : "default"}
-          className={classes.button} 
-          onClick={this.uncompleteList}
-        >
-          未完成
-        </Button>
-        <Switch 
-          checked={darkMode} 
-          color="default"
-          //color={darkMode ? "secondary" : "primary"}
-          onClick={this.props.toggleDarkMode}
-        />
+      <Card className={classes.todolist}>
+        <LinearProgress value={progress} variant="determinate" color="primary"/>
+        <CardContent className={classes.cardHeader}>
+          <div className={classes.history}>
+            <Undo onClick={this.props.undo} className={classes.icon} />
+            <Redo onClick={this.props.redo} className={classes.icon} />
+          </div>
+          <div className="buttons">
+            <Button 
+              variant="contained"
+              color={listState===0 ? "primary" : "default"}
+              className={classes.button}
+              onClick={this.all}
+            >
+              全部
+            </Button>
+            <Button 
+              variant="contained"
+              color={listState===1 ? "primary" : "default"}
+              className={classes.button} 
+              onClick={this.completed}
+            >
+              完成
+            </Button>
+            <Button 
+              variant="contained"
+              color={listState===2 ? "primary" : "default"}
+              className={classes.button} 
+              onClick={this.uncompleted}
+            >
+              未完成
+            </Button>
+          </div>
+          <Delete className={classes.delete} onClick={this.props.deleteTodoList}  />
+        </CardContent>
         <CardContent>
           <List>
             {todolist.map(item =>
               <Item
+                classes={classes}
+                darkMode={darkMode}
+
+                todo={item}
                 key={item.id}
                 checked={item.checked}
                 value={item.value}
                 modifyValue={item.modifyValue}
-                todo={item}
+
                 checkTodo={checkTodo}
                 removeTodo={removeTodo}
-
-                darkMode={darkMode}
 
                 modifyState={modifyState}
                 modifyTodo={modifyTodo}
