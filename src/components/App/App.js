@@ -19,12 +19,10 @@ const darkTheme = createMuiTheme({
 const styles = () => ({
   lightTheme: {
     height: "100%",
-    backgroundColor: "#fff",
     color: "#666"
   },
   darkTheme: {
     height: "100%",
-    backgroundColor: "#222",
     color: "#ccc"
   }
 })
@@ -136,6 +134,9 @@ class App extends Component {
     this.setState({
       darkMode: !darkMode
     })
+    let body = document.querySelector('body')
+    if(darkMode) body.style.backgroundColor = "#fff"
+    else body.style.backgroundColor = "#333"
   }
   inputChange = e => { // 這種使用arrow function寫法叫什麼？
     this.setState({
@@ -230,7 +231,7 @@ class App extends Component {
     const { inputValue, todoList, progress, darkMode, modifyState } = this.state
     const { classes } = this.props
     return (
-      <MuiThemeProvider theme={ darkMode ? darkTheme : lightTheme }  >
+      <MuiThemeProvider theme={ darkMode ? darkTheme : lightTheme } className={ darkMode ? classes.darkTheme: classes.lightTheme }  >
         <div className={ darkMode ? classes.darkTheme: classes.lightTheme }>
           <Header 
             darkMode={darkMode}
