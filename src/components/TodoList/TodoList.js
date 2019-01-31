@@ -1,4 +1,4 @@
-import React, { Component } from 'react' // Fragment 是什麼意思？
+import React, { Component } from 'react' 
 import { withStyles } from '@material-ui/core'
 import { Card, CardContent } from '@material-ui/core'
 import { LinearProgress } from '@material-ui/core'

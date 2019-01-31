@@ -151,7 +151,7 @@ class App extends Component {
     })
   }
   addTodoSubmit = e => e.keyCode===13 ? this.addTodo() : 0
-  addTodo = () => { // react 命名的慣例是什麼？ todoAdd？
+  addTodo = () => { 
     const { todoList, id, inputValue } = this.state
     const { history, historyStep } = this.state
     if(inputValue!=='') {
