@@ -3,8 +3,9 @@
 
 ## 截圖
 ### Light Mode
-
+![image](https://github.com/futianshen/React-Todo/blob/master/img/LightMode.png)
 ### Dark Mode
+![image](https://github.com/futianshen/React-Todo/blob/master/img/DarkMode.png)
 
 ## 功能
 - 切換 Light / Dark Mode
